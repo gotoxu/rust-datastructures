@@ -69,6 +69,74 @@ impl<T: Ord + Copy> AvlTree<T> {
             Some(n) => self.root = Some(insert(n, entry)),
         }
     }
+
+    pub fn delete(&mut self, entry: T) {
+        match self.root.take() {
+            None => (),
+            Some(n) => self.root = delete(n, entry),
+        }
+    }
+}
+
+fn delete<T: Ord + Copy>(mut root: Box<TreeNode<T>>, entry: T) -> Option<Box<TreeNode<T>>> {
+    match node.entry.cmp(&entry) {
+        Ordering::Equal => delete_root(root),
+        Ordering::Less => {
+            if let Some(n) = root.right.take() {
+                root.right = delete(n, entry);
+                Some(update_node(root))
+            }
+        }
+        Ordering::Greater => {
+            if let Some(n) = root.left.take() {
+                root.left = delete(n, entry);
+                Some(update_node(root))
+            }
+        }
+    }
+}
+
+fn delete_root<T: Ord + Copy>(mut root: Box<TreeNode<T>>) -> Option<Box<TreeNode<T>>> {
+    match (root.left.take(), root.right.take()) {
+        (None, None) => None,
+        (Some(l), None) => Some(l),
+        (None, Some(r)) => Some(r),
+        (Some(l), Some(r)) => Some(combine_two_subtrees(l, r)),
+    }
+}
+
+fn combine_two_subtrees<T: Ord + Copy>(
+    l: Box<TreeNode<T>>,
+    r: Box<TreeNode<T>>,
+) -> Box<TreeNode<T>> {
+    let (remaining_tree, min) = drop_min(r);
+    let mut new_root = min;
+    new_root.left = Some(l);
+    new_root.right = remaining_tree;
+    update_node(new_root)
+}
+
+fn drop_min<T: Ord + Copy>(
+    mut root: Box<TreeNode<T>>,
+) -> (Option<Box<TreeNode<T>>>, Box<TreeNode<T>>) {
+    match root.left.take() {
+        Some(left) => drop_min_from_left(root, left),
+        None => (root.right.take(), root),
+    }
+}
+
+fn drop_min_from_left<T: Ord + Copy>(
+    mut root: Box<TreeNode<T>>,
+    left: Box<TreeNode<T>>,
+) -> (Option<Box<TreeNode<T>>>, Box<TreeNode<T>>) {
+    let (new_left, min) = drop_min(left);
+    root.left = new_left;
+    (Some(update_node(root)), min)
+}
+
+fn update_node<T: Ord + Copy>(mut root: Box<TreeNode<T>>) -> Box<TreeNode<T>> {
+    update_height(&mut root);
+    rotate(root)
 }
 
 fn insert<T: Ord + Copy>(mut node: Box<TreeNode<T>>, entry: T) -> Box<TreeNode<T>> {
