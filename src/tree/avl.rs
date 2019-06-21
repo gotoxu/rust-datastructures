@@ -79,20 +79,22 @@ impl<T: Ord + Copy> AvlTree<T> {
 }
 
 fn delete<T: Ord + Copy>(mut root: Box<TreeNode<T>>, entry: T) -> Option<Box<TreeNode<T>>> {
-    match node.entry.cmp(&entry) {
+    match root.entry.cmp(&entry) {
         Ordering::Equal => delete_root(root),
-        Ordering::Less => {
-            if let Some(n) = root.right.take() {
+        Ordering::Less => match root.right.take() {
+            Some(n) => {
                 root.right = delete(n, entry);
                 Some(update_node(root))
             }
-        }
-        Ordering::Greater => {
-            if let Some(n) = root.left.take() {
+            None => None,
+        },
+        Ordering::Greater => match root.left.take() {
+            Some(n) => {
                 root.left = delete(n, entry);
                 Some(update_node(root))
             }
-        }
+            None => None,
+        },
     }
 }
 
